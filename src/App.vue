@@ -1,9 +1,9 @@
 <template>
   <div :style="mainStyles" class="app">
-    <div class="navigation">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link> |
-      <router-link to="/download">Download</router-link>
+    <div :class="`navigation${scrollPosition > scrollReference ? ' navigation-expanded' : ''}`">
+      <router-link to="/">{{ $t('message.HOME') }}</router-link> |
+      <router-link to="/about">{{ $t('message.ABOUT') }}</router-link> |
+      <router-link to="/download">{{ $t('message.DOWNLOAD') }}</router-link>
       <label class="toggle-container">
         <input v-model="isDarkMode" class='toggle-checkbox' type='checkbox'>
         <div class='toggle-slot'>
@@ -17,7 +17,23 @@
         </div>
       </label>
     </div>
-    <router-view/>
+    <div style="min-height: 100vh;">
+      <router-view />
+    </div>
+    <div class="footer">
+      <p>
+        ©2022{{ new Date().getFullYear() === 2022 ? '' : '-' + new Date().getFullYear() }}
+        Gemuprod, {{ $t('message.ALL_RIGHTS_RESERVED') }}
+      </p>
+      <div class="footer-items">
+        <div class="footer-items-links">
+          <router-link to="/">{{ $t('message.HOME') }}</router-link>
+          <router-link to="/about">{{ $t('message.ABOUT') }}</router-link>
+          <router-link to="/download">{{ $t('message.DOWNLOAD') }}</router-link>
+        </div>
+        <p class="footer-items-lang" @click="changeLang">{{ lang === 'en' ? '🇺🇸' : '🇫🇷' }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -26,6 +42,9 @@ export default {
   data() {
     return {
       isDarkMode: false,
+      scrollPosition: null,
+      scrollReference: null,
+      lang: 'en',
     };
   },
   computed: {
@@ -42,6 +61,45 @@ export default {
       };
     },
   },
+  watch: {
+    isDarkMode(newValue) {
+      localStorage.setItem('darkMode', newValue);
+    },
+  },
+  methods: {
+    updateScroll() {
+      this.scrollPosition = window.scrollY;
+      this.scrollReference = window.innerHeight / 2;
+    },
+    changeLang() {
+      if (localStorage.getItem('lang') && localStorage.getItem('lang') === 'en') {
+        localStorage.setItem('lang', 'fr');
+        this.lang = 'fr';
+      } else {
+        localStorage.setItem('lang', 'en');
+        this.lang = 'en';
+      }
+      window.location.reload();
+    },
+  },
+  mounted() {
+    window.addEventListener('scroll', this.updateScroll);
+    // Checking Dark mode
+    if (localStorage.getItem('darkMode')) {
+      const isDarkModeString = JSON.parse(localStorage.getItem('darkMode'));
+      this.isDarkMode = isDarkModeString;
+    }
+    // Checking language
+    if (localStorage.getItem('lang')) {
+      this.lang = localStorage.getItem('lang');
+    } else if (navigator.language.split('-')[0] === 'en' || navigator.language.split('-')[0] === 'fr') {
+      const lang = navigator.language.split('-')[0];
+      this.lang = lang;
+    }
+  },
+  destroy() {
+    window.removeEventListener('scroll', this.updateScroll);
+  },
 };
 </script>
 
@@ -50,14 +108,19 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 .app {
+  transition: 0.3s ease;
+  margin-top: 50px;
   font-family: 'Roboto';
   min-height: 100vh;
   color: var(--font-color);
 }
 
 .navigation {
-  background: rgba(var(--bg-color), 255);
+  transition: 0.3s ease;
+  border-radius: 25px;
   padding: 0 5%;
+  margin: 50px 0;
+  background: rgba(var(--bg-color), 255);
   z-index: 999;
   top: 0;
   left: 0;
@@ -68,19 +131,52 @@ export default {
   justify-content: space-around;
   width: calc(100% - 10%);
   height: 50px;
+  @media (min-width: $screen-md-min) {
+    margin: 50px 7%;
+    width: calc(100% - 24%);
+  }
+
+  &-expanded {
+    margin: 0;
+    @media (min-width: $screen-md-min) {
+      margin: 0 7%;
+    }
+  }
 
   a {
     font-weight: bold;
     color: var(--font-color);
+    text-decoration: none;
 
     &.router-link-exact-active {
-      color: #ffd500;
+      display: flex;
+      align-items: center;
+      color: $blue;
+
+      &:before {
+        content: '';
+        background-image: url('https://i.ibb.co/7Xh0g7D/Canette.png');
+        background-size: 30px 30px;
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+      }
+
+      &:after {
+        content: '';
+        background-image: url('https://i.ibb.co/7Xh0g7D/Canette.png');
+        background-size: 30px 30px;
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+      }
     }
   }
 }
 
 .toggle-container {
   transform: scale(25%);
+  -webkit-transform:scale(0.25, 0.25);
   position: fixed;
   transform-origin: bottom left;
   bottom: 10px;
@@ -99,10 +195,8 @@ export default {
   position: relative;
   height: 10em;
   width: 20em;
-  border: 5px solid #e4e7ec;
-  border-radius: 10em;
+  border-radius: 100px;
   background-color: white;
-  box-shadow: 0px 10px 25px #e4e7ec;
   transition: background-color 250ms;
 }
 
@@ -174,5 +268,70 @@ export default {
 .toggle-checkbox:checked ~ .toggle-slot .moon-icon-wrapper {
   opacity: 1;
   transform: translate(12em, 2em) rotate(-15deg);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 25px;
+  margin: 50px 0 100px;
+  padding: 0 5%;
+  width: calc(100% - 14%);
+  background: rgba(var(--bg-color), 255);
+  height: 60px;
+
+  @media (min-width: $screen-md-min) {
+    width: calc(100% - 24%);
+    margin: 50px 7% 100px;
+  }
+
+  &-items {
+    display: flex;
+    align-items: center;
+    &-lang {
+      font-size: 24px;
+      cursor: pointer;
+      margin-left: 15px;
+    }
+    &-links {
+      display: none;
+      align-items: center;
+      @media (min-width: $screen-md-min) {
+        display: flex;
+      }
+    }
+
+    a {
+      margin-left: 10px;
+      font-weight: bold;
+      color: var(--font-color);
+      text-decoration: none;
+
+      &.router-link-exact-active {
+        display: flex;
+        align-items: center;
+        color: $blue;
+
+        &:before {
+          content: '';
+          background-image: url('https://i.ibb.co/7Xh0g7D/Canette.png');
+          background-size: 30px 30px;
+          display: inline-block;
+          width: 30px;
+          height: 30px;
+        }
+
+        &:after {
+          content: '';
+          background-image: url('https://i.ibb.co/7Xh0g7D/Canette.png');
+          background-size: 30px 30px;
+          display: inline-block;
+          width: 30px;
+          height: 30px;
+        }
+      }
+    }
+  }
 }
 </style>

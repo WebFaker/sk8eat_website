@@ -2,8 +2,11 @@
 @import './vars.scss';
 
 h1 {
-  font-size: 15em;
+  font-size: 1em;
   font-weight: 900;
+  @media (min-width: $screen-lg-min) {
+    font-size: 15em;
+  }
 }
 
 h2 {

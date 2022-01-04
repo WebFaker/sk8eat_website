@@ -1,15 +1,12 @@
 <template>
   <div class="home">
-    <div class="home-header">
-      <img class="home-header-logo" alt="Sk8Eat! logo" src="../assets/logo.png">
-      <h1 class="home-header-title">SK8<br>EAT!</h1>
-    </div>
+    <Header />
     <div style="margin-top: 90vh;" class="home-section">
       <h2 class="home-section-title">
-        DISCOVER AN ALTERNATIVE WORLD.
+        {{ $t('message.HOME_TITLE') }}
         <br>
         <span class="home-section-subtitle">
-          Wanna discover a parallel universe?
+          {{ $t('message.HOME_SUBTITLE') }}
         </span>
       </h2>
       <div class="home-section-scrolling-container">
@@ -20,95 +17,47 @@
         >
       </div>
       <p class="home-section-text">
-        Your goal is to get to your food on time.
-        A timer is activated as soon as you start the game.
-        If you manage to get your kebab before the timer runs out, you've won.
-        But be careful, you also have a limited life system that can make you lose.
-        Bonuses are available to go faster or to recover lives.
+        {{ $t('message.ABOUT_TEXT_2') }}
       </p>
     </div>
     <div class="home-section">
       <h2 class="home-section-title">
-        ARE YOU READY TO GO?
+        {{ $t('message.HOME_DOWNLOAD_TITLE') }}
         <br>
         <span class="home-section-subtitle">
-          Get and play the game now!
+          {{ $t('message.HOME_DOWNLOAD_SUBTITLE') }}
         </span>
       </h2>
-      <div class="home-section-download-button-container">
-        <button class="home-section-download-button" @click="getDownloadLink(false)">
-          <mdicon name="apple" />
-          Download for Mac
-        </button>
-        <button class="home-section-download-button" @click="getDownloadLink(true)">
-          <mdicon name="microsoft-windows" />
-          Download for Windows
-        </button>
-      </div>
+      <DownloadButtons />
+    </div>
+    <div class="home-section discord-section">
+      <h2 class="home-section-title">
+        {{ $t('message.HOME_DISCORD_TITLE') }}
+        <br>
+        <span class="home-section-subtitle">
+          {{ $t('message.HOME_DISCORD_SUBTITLE') }}
+        </span>
+      </h2>
+      <button class="download-button discord-section-button">
+        <a href="https://discord.gg/Q6XTZpgngd" target="_blank">
+          <mdicon name="discord" />
+          {{ $t('message.HOME_DISCORD_BUTTON') }}
+        </a>
+      </button>
     </div>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import axios from 'axios';
+import Header from '@/components/Header.vue';
+import DownloadButtons from '@/components/DownloadButtons.vue';
 
 export default {
   name: 'Home',
   components: {
-  },
-  methods: {
-    async getDownloadLink(isWindows) {
-      // Create a reference to the file we want to download
-      const storage = getStorage();
-      let gameRef = null;
-      let label = null;
-      if (isWindows) {
-        gameRef = ref(storage, 'game/Sk8Eat.zip');
-        label = 'Sk8Eat.zip';
-      } else {
-        gameRef = ref(storage, 'game/Sk8Eat.dmg');
-        label = 'Sk8Eat.dmg';
-      }
-      // Get the download URL
-      getDownloadURL(gameRef)
-      // Insert url into an <img> tag to "download"
-        .then((url) => {
-          console.log(url);
-          const response = axios.get(url, { responseType: 'blob' });
-          const blob = new Blob([response.data]);
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = label;
-          link.click();
-          URL.revokeObjectURL(link.href);
-        })
-        .catch((error) => {
-          // A full list of error codes is available at
-          // https://firebase.google.com/docs/storage/web/handle-errors
-          switch (error.code) {
-            case 'storage/object-not-found':
-              // File doesn't exist
-              break;
-            case 'storage/unauthorized':
-              // User doesn't have permission to access the object
-              break;
-            case 'storage/canceled':
-              // User canceled the upload
-              break;
-
-              // ...
-
-            case 'storage/unknown':
-              // Unknown error occurred, inspect the server response
-              break;
-
-            default:
-              console.log('oops');
-          }
-        });
-    },
+    Header,
+    DownloadButtons,
   },
 };
 </script>
@@ -117,71 +66,16 @@ export default {
 @import '@/styles/vars.scss';
 
 .home {
-  &-header {
-    z-index: -1;
-    position: fixed;
-    padding-top: 100px;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 95vh;
-    background: linear-gradient(rgba(227, 103, 84, 255), rgba(223, 72, 119, 255));
+  border-radius: 25px;
+  background: rgba(var(--bg-color), 255);
 
-    &-title {
-    position: absolute;
-    top: 10%;
-    left: 5%;
-    font-size: 20em;
-    color: white;
-  }
-
-    &-logo {
-      filter: drop-shadow(5px 5px 0 white)
-              drop-shadow(-4px -4px 0 white);
-      z-index: 2;
-      position: absolute;
-      top: 10%;
-      right: 5%;
-      animation: logo-float 5s linear infinite;
-    }
+  @media (min-width: $screen-md-min) {
+    margin: 0 7%;
   }
 
   &-section {
-    background: rgba(var(--bg-color), 255);
+    border-radius: 25px;
     padding: 50px 5%;
-
-    &-download-button {
-      display: inline-block;
-      border: none;
-      padding: 1rem 2rem;
-      margin: 0;
-      text-decoration: none;
-      background: rgb(74, 145, 203);
-      color: #ffffff;
-      font-family: sans-serif;
-      font-size: 1rem;
-      cursor: pointer;
-      text-align: center;
-      transition: background 250ms ease-in-out,
-                  transform 150ms ease;
-                  -webkit-appearance: none;
-                  -moz-appearance: none;
-
-      &-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-evenly;
-      }
-    }
-
-    .home-section-download-button:hover,
-    .home-section-download-button:focus {
-        background: $blue;
-    }
-
-    .home-section-download-button:active {
-        transform: scale(0.95);
-    }
 
     &-title {
       position: relative;
@@ -201,26 +95,48 @@ export default {
       text-align: justify;
       margin-top: 25px;
     }
-
   }
-
 }
 
 .home-section-scrolling-container {
   position: relative;
   width: 100%;
-  height: 300px;
-  background: url('https://i.imgur.com/lwufNlL.png'), linear-gradient(rgba(227, 103, 84, 0), rgba(227, 103, 84, 255), rgba(223, 72, 119, 255), rgba(79, 44, 63, 255), rgba(79, 44, 63, 255), rgba(79, 44, 63, 255));
+  height: 100px;
+  background: url('https://i.imgur.com/lwufNlL.png'), linear-gradient(rgba(227, 103, 84, 0), rgba(227, 103, 84, 255), rgba(79, 44, 63, 255), rgba(79, 44, 63, 255));
   background-repeat: repeat-x;
   background-size: 50%;
   animation: scroll-anim 15s linear infinite;
 
+  @media (min-width: $screen-sm-min) {
+    height: 150px;
+  }
+
+  @media (min-width: $screen-md-min) {
+    height: 300px;
+  }
+
+  @media (min-width: $screen-xl-min) {
+    height: 500px;
+  }
+
   &-skater {
     position: absolute;
-    height: 150px;
+    height: 50px;
     bottom: 5px;
     left: 10%;
     animation: skater-moves 15s linear infinite;
+
+    @media (min-width: $screen-sm-min) {
+      height: 100px;
+    }
+
+    @media (min-width: $screen-md-min) {
+      height: 150px;
+    }
+
+    @media (min-width: $screen-xl-min) {
+      height: 200px;
+    }
   }
 }
 
@@ -229,11 +145,23 @@ export default {
 .home-section-scrolling-container::before {
   content: "";
   width: 100%;
-  height: 300px;
+  height: 100px;
   position: absolute;
   background: url('https://i.imgur.com/ZgabRKW.png') repeat-x;
   background-size: 50%;
   animation: scroll-anim 10s linear infinite;
+
+  @media (min-width: $screen-sm-min) {
+    height: 150px;
+  }
+
+  @media (min-width: $screen-md-min) {
+    height: 300px;
+  }
+
+  @media (min-width: $screen-xl-min) {
+    height: 500px;
+  }
 }
 
 // .home-section-scrolling-container::after {
@@ -269,4 +197,16 @@ export default {
     transform: translateY(0);
   }
 }
+
+.discord-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &-button > a {
+    color: white;
+    text-decoration: none;
+  }
+}
+
 </style>
